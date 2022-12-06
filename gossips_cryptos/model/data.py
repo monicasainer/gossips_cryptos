@@ -4,10 +4,6 @@ import seaborn as sns
 import requests
 import os
 
-# Greed and Fear index
-
-## Getting data:
-
 def fgindex() -> pd.DataFrame:
     """returns a dataframe of fear and greed index with columns:
     [value],[value_classification],[timestamp],[time_until_update] """
