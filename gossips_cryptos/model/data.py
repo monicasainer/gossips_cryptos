@@ -32,10 +32,9 @@ def prices(crypto)-> pd.DataFrame:
     """returns a dataframe with columns:
     ['time_period_start'], ['time_period_end'], ['time_open'], ['time_close'],
     ['rate_open'], ['rate_high'], ['rate_low'], ['rate_close'] """
-
-    today = datetime.datetime.today()
+    today = datetime.datetime.today().strftime('%Y-%m-%d')
     key = os.environ.get('API_Key')
-    url = 'https://rest.coinapi.io/v1/exchangerate/{crypto}/USD/history?period_id=1DAY&time_start=2018-02-01T00:00:00&time_end={today}T00:00:00&limit=100000'
+    url = f'https://rest.coinapi.io/v1/exchangerate/{crypto}/USD/history?period_id=1DAY&time_start=2018-02-01T00:00:00&time_end={today}T00:00:00&limit=100000'
     headers = {'X-CoinAPI-Key' : key} #API-key
     response = requests.get(url, headers=headers).json()
     crypto = pd.DataFrame(response)
