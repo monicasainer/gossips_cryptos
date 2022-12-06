@@ -3,6 +3,7 @@ import datetime
 import seaborn as sns
 import requests
 import os
+from Historic_Crypto import HistoricalData
 
 #Currency Converter
 def currency_converter()-> pd.DataFrame:
@@ -28,14 +29,10 @@ def fgindex() -> pd.DataFrame:
 
 
 #Closing prices
+crypto = 'BTC'
+
 def prices(crypto)-> pd.DataFrame:
-    """returns a dataframe with columns:
-    ['time_period_start'], ['time_period_end'], ['time_open'], ['time_close'],
-    ['rate_open'], ['rate_high'], ['rate_low'], ['rate_close'] """
+
     today = datetime.datetime.today().strftime('%Y-%m-%d')
-    key = os.environ.get('API_Key')
-    url = f'https://rest.coinapi.io/v1/exchangerate/{crypto}/USD/history?period_id=1DAY&time_start=2018-02-01T00:00:00&time_end={today}T00:00:00&limit=100000'
-    headers = {'X-CoinAPI-Key' : key} #API-key
-    response = requests.get(url, headers=headers).json()
-    crypto = pd.DataFrame(response)
-    return crypto
+    crypto_df = HistoricalData(f'{crypto}-USD',86400,'2018-01-31-00-00',f"{today}-00-00",verbose = False).retrieve_data()
+    return crypto_df
