@@ -1,7 +1,0 @@
-README.md
-setup.py
-gossips_cryptos.egg-info/PKG-INFO
-gossips_cryptos.egg-info/SOURCES.txt
-gossips_cryptos.egg-info/dependency_links.txt
-gossips_cryptos.egg-info/not-zip-safe
-gossips_cryptos.egg-info/top_level.txt
