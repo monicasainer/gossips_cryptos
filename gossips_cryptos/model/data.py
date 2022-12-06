@@ -4,6 +4,7 @@ import seaborn as sns
 import requests
 import os
 
+#Currency Converter
 def currency_converter()-> pd.DataFrame:
     """Finding a fitting currency conversion API (Based on USD) and requesting the data as a function """
 
@@ -14,6 +15,7 @@ def currency_converter()-> pd.DataFrame:
     return df
 
 
+#FearGridIndex
 def fgindex() -> pd.DataFrame:
     """returns a dataframe of fear and greed index with columns:
     [value],[value_classification],[timestamp],[time_until_update] """
@@ -25,7 +27,7 @@ def fgindex() -> pd.DataFrame:
     return fg
 
 
-# Closing prices
+#Closing prices
 def prices(crypto)-> pd.DataFrame:
     """returns a dataframe with columns:
     ['time_period_start'], ['time_period_end'], ['time_open'], ['time_close'],
