@@ -1,6 +1,7 @@
 import pandas as pd
+import numpy as np
 from gossips_cryptos.model.data import prices, fgindex
-from sklearn.preprocessing import  StandardScaler
+from sklearn.preprocessing import  RobustScaler
 # from gossips_cryptos.model.preprocess import data_cleaning
 
 
@@ -17,6 +18,7 @@ def data_cleaning(crypto):
     #cleaning the sentiment data
     sentiment_data = fgindex()
     sentiment_data['timestamp'] = pd.to_datetime(sentiment_data['timestamp'])
+    sentiment_data['value'] = sentiment_data['value'].astype('float')
     fg= pd.DataFrame(sentiment_data[['value', 'timestamp']])
     fg.set_index('timestamp', inplace=True)
 
