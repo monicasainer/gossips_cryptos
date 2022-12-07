@@ -1,22 +1,22 @@
 import pandas as pd
 import numpy as np
 from gossips_cryptos.model.data import prices, fgindex
-from sklearn.preprocessing import  RobustScaler
+from sklearn.preprocessing import  MaxMinScaler
 # from gossips_cryptos.model.preprocess import data_cleaning
 
 
-def data_cleaning(crypto):
+def data_cleaning(raw_data_prices,raw_data_sentiment):
     '''The function returns a dataframe containing:
     price: the historical crypto price
     index: the Grid/fear index value
     '''
     #cleaning the price data
 
-    BTC_USD = prices(crypto)
-    BTC_USD= BTC_USD['close']
+    data = raw_data_prices # raw_data_prices = prices (crypto)
+    data = data['close']
 
     #cleaning the sentiment data
-    sentiment_data = fgindex()
+    sentiment_data = raw_data_sentiment # raw_data_sentiment = fgindex()
     sentiment_data['timestamp'] = pd.to_datetime(sentiment_data['timestamp'])
     sentiment_data['value'] = sentiment_data['value'].astype('float')
     fg= pd.DataFrame(sentiment_data[['value', 'timestamp']])
@@ -24,7 +24,7 @@ def data_cleaning(crypto):
 
 
     #merging the price and sentiment data
-    df = fg.join(BTC_USD)
+    df = fg.join(data)
 
     #cleaning the merged dataframe
     df.dropna(inplace=True)
@@ -34,12 +34,12 @@ def data_cleaning(crypto):
 
 
 
-def window_data(crypto='BTC',window=10):
+def window_data(data_cleaned,window=10):
     """returns two arrays:
     X : Array of lists. Each list contains n_window observations of features.
     y: Array of lists. Each list contains the price of obs n_window + 1
     """
-    df = data_cleaning(crypto)
+    df = data_cleaned # data_cleaned = data_cleaning(raw_data_prices,raw_data_sentiment)
     feature_column = df.columns.get_loc('index')
     target_column = df.columns.get_loc('price')
     X = []
@@ -54,7 +54,7 @@ def window_data(crypto='BTC',window=10):
     return np.array(X), np.array(y).reshape(-1, 1)
 
 
-def folds(crypto='BTC',window=10):
+def folds(window_data ,window=10):
     """ returns four arrays:
     X_train : array of lists with the 70% of the observed feature values
     X_test : array of lists with the 30% of the observed feature values
@@ -62,7 +62,7 @@ def folds(crypto='BTC',window=10):
     y_test : array of lists with the 30% of the observed target values
     """
 
-    X, y = window_data(crypto,window)
+    X, y = window_data # window_data = window_data(data_cleaned,window)
     split = int(.7 * len(X))
     X_train = X[:split - 1]
     X_test = X[split:]
@@ -71,10 +71,9 @@ def folds(crypto='BTC',window=10):
     y_train = y[:split - 1]
     y_test = y[split:]
 
-    return X_train,X_test,y_train,y_test
 
 
-def scaling(crypto='BTC',window=10):
+def scaling(folds_data,window=10):
     """ returns four arrays:
     X_train_scaled : array of lists with the 70% of the observed feature values scaled,
     X_test_scaled : array of lists with the 30% of the observed feature values scaled,
@@ -82,8 +81,8 @@ def scaling(crypto='BTC',window=10):
     y_test_scaled : array of lists with the 30% of the observed target values scaled.
     """
 
-    scaler = RobustScaler()
-    X_train,X_test,y_train,y_test = folds(crypto,window)
+    scaler = MaxMinScaler()
+    X_train,X_test,y_train,y_test = folds_data # folds_data =folds(window_data,window)
 
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
@@ -94,14 +93,14 @@ def scaling(crypto='BTC',window=10):
     return X_train_scaled,X_test_scaled,y_train_scaled,y_test_scaled
 
 
-def reshape(crypto='BTC',window=10):
+def reshape(X_train_scaled,X_test_scaled,window=10):
     """ returns two arrays:
     X_train : array of lists with the 70% of the observed feature values scaled,
     and reshaped.
     X_test : array of lists with the 30% of the observed feature values
     scaled, and reshaped
     """
-    X_train_scaled,X_test_scaled = scaling(crypto,window)[0],scaling(crypto,window)[1]
+    #X_train_scaled,X_test_scaled = scaling(crypto,window)[0],scaling(crypto,window)[1]
     X_train = X_train_scaled.reshape((X_train_scaled.shape[0], X_train_scaled.shape[1], 1))
     X_test = X_test_scaled.reshape((X_test_scaled.shape[0], X_test_scaled.shape[1], 1))
     return X_train,X_test
