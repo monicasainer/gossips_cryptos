@@ -1,15 +1,10 @@
-'''
-
 import mlflow
 from mlflow.tracking import MlflowClient
-
 import glob
 import os
 import time
 import pickle
-
 from colorama import Fore, Style
-
 from tensorflow.keras import Model, models
 
 
@@ -74,82 +69,3 @@ def save_model(model: Model = None,
     print("\n✅ data saved locally")
 
     return None
-
-
-def load_model(save_copy_locally=False) -> Model:
-    """
-    load the latest saved model, return None if no model found
-    """
-    if os.environ.get("MODEL_TARGET") == "mlflow":
-        stage = "Production"
-
-        print(Fore.BLUE + f"\nLoad model {stage} stage from mlflow..." + Style.RESET_ALL)
-
-        # load model from mlflow
-        model = None
-        mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI"))
-
-        mlflow_model_name = os.environ.get("MLFLOW_MODEL_NAME")
-
-        stage = "Production"
-
-        model_uri = f"models:/{mlflow_model_name}/{stage}"
-        print(f"- uri: {model_uri}")
-
-        try:
-            model = mlflow.keras.load_model(model_uri=model_uri)
-            print("\n✅ model loaded from mlflow")
-        except:
-            print(f"\n❌ no model in stage {stage} on mlflow")
-            return None
-
-        return model
-
-    print(Fore.BLUE + "\nLoad model from local disk..." + Style.RESET_ALL)
-
-    # get latest model version
-    model_directory = os.path.join(LOCAL_REGISTRY_PATH, "models")
-
-    results = glob.glob(f"{model_directory}/*")
-    if not results:
-        return None
-
-    model_path = sorted(results)[-1]
-    print(f"- path: {model_path}")
-
-    model = models.load_model(model_path)
-    print("\n✅ model loaded from disk")
-
-    return model
-
-
-def get_model_version(stage="Production"):
-    """
-    Retrieve the version number of the latest model in the given stage
-    - stages: "None", "Production", "Staging", "Archived"
-    """
-
-    if os.environ.get("MODEL_TARGET") == "mlflow":
-
-        mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI"))
-
-        mlflow_model_name = os.environ.get("MLFLOW_MODEL_NAME")
-
-        client = MlflowClient()
-
-        try:
-            version = client.get_latest_versions(name=mlflow_model_name, stages=[stage])
-        except:
-            return None
-
-        # check whether a version of the model exists in the given stage
-        if not version:
-            return None
-
-        return int(version[0].version)
-
-    # model version not handled
-
-    return None
-
-'''
