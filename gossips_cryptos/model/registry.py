@@ -1,5 +1,3 @@
-'''
-
 import mlflow
 from mlflow.tracking import MlflowClient
 
@@ -12,6 +10,7 @@ from colorama import Fore, Style
 
 from tensorflow.keras import Model, models
 
+from gossips_cryptos.model.model import init_baseline,compile_model,train_model,evaluate_model
 
 def save_model(model: Model = None,
                params: dict = None,
@@ -46,9 +45,9 @@ def save_model(model: Model = None,
                                        keras_module="tensorflow.keras",
                                        registered_model_name=mlflow_model_name)
 
-
         return None
 
+'''
     print(Fore.BLUE + "\nSave model to local disk..." + Style.RESET_ALL)
 
     # save params

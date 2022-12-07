@@ -29,9 +29,8 @@ def fgindex() -> pd.DataFrame:
 
 
 #Closing prices
-crypto = 'BTC'
 
-def prices(crypto)-> pd.DataFrame:
+def prices(crypto='BTC')-> pd.DataFrame:
 
     today = datetime.datetime.today().strftime('%Y-%m-%d')
     crypto_df = HistoricalData(f'{crypto}-USD',86400,'2018-01-31-00-00',f"{today}-00-00",verbose = False).retrieve_data()
