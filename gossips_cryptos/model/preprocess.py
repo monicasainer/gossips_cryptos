@@ -82,7 +82,7 @@ def scaling(crypto='BTC',window=10):
     y_test_scaled : array of lists with the 30% of the observed target values scaled.
     """
 
-    scaler = StandardScaler()
+    scaler = RobustScaler()
     X_train,X_test,y_train,y_test = folds(crypto,window)
 
     X_train_scaled = scaler.fit_transform(X_train)
