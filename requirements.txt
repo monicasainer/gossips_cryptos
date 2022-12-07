@@ -1,6 +1,4 @@
-<<<<<<< HEAD
-mlflow
-=======
+mlflow==1.26.1
 ipdb
 ipykernel
 matplotlib
@@ -12,4 +10,3 @@ pytest
 seaborn
 scikit-learn
 tensorflow
->>>>>>> master
