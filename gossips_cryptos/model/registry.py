@@ -47,7 +47,7 @@ def save_model(model: Model = None,
 
         return None
 
-'''
+
     print(Fore.BLUE + "\nSave model to local disk..." + Style.RESET_ALL)
 
     # save params
@@ -150,5 +150,3 @@ def get_model_version(stage="Production"):
     # model version not handled
 
     return None
-
-'''
