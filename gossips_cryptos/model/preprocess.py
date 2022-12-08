@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
-from gossips_cryptos.model.data import prices, fgindex
 from sklearn.preprocessing import  MinMaxScaler
 
+#from gossips_cryptos.model.data import prices, fgindex
 # from gossips_cryptos.model.preprocess import data_cleaning
 
 
@@ -48,7 +48,7 @@ def window_data(cleaned_data,window=20,horizon=1):
 
     for i in range(len(df) - window - 1):
         features = df.iloc[i:(i + window),feature_column]
-        target = df.iloc[(i + window+ horizon), target_column]
+        target = df.iloc[(i + window + horizon), target_column]
         X.append(features)
         y.append(target)
 
@@ -80,27 +80,28 @@ def scaling(X_train,X_test,y_train,y_test):
     y_test_scaled : array of lists with the 30% of the observed target values scaled.
     """
 
-    scaler = MinMaxScaler()
+    scaler_x = MinMaxScaler()
+    scaler_y= MinMaxScaler()
     nsamples, nx, ny = X_train.shape
     X_train = X_train.reshape((nsamples,nx*ny))
 
     nsamples, nx, ny = X_test.shape
     X_test = X_test.reshape((nsamples,nx*ny))
 
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
+    X_train_scaled = scaler_x.fit_transform(X_train)
+    X_test_scaled = scaler_x.transform(X_test)
 
-    y_train_scaled = scaler.fit_transform(y_train)
-    y_test_scaled = scaler.transform(y_test)
+    y_train_scaled = scaler_y.fit_transform(y_train)
+    y_test_scaled = scaler_y.transform(y_test)
 
     X_train = X_train_scaled.reshape((X_train_scaled.shape[0], 20, 2))
     X_test = X_test_scaled.reshape((X_test_scaled.shape[0],  20, 2))
 
-    return X_train_scaled,X_test_scaled,y_train_scaled,y_test_scaled
+    return X_train_scaled,X_test_scaled,y_train_scaled,y_test_scaled,scaler_y
 
 
 def preprocess_features(cleaned_data: pd.DataFrame,window=20) -> np.ndarray:
-    data_scaled = scaling(cleaned_data,window=10)
-    data = window_data(data_scaled,window=10)
-    X_train,X_test,y_train,y_test = folds(data ,window)
-    return X_train,X_test,y_train,y_test
+    X,y=window_data(cleaned_data)
+    X_train,X_test,y_train,y_test = folds(X,y ,window)
+    X_train_scaled,X_test_scaled,y_train_scaled,y_test_scaled,scaler_y = scaling(X_train,X_test,y_train,y_test)
+    return X_train_scaled,X_test_scaled,y_train_scaled,y_test_scaled,scaler_y

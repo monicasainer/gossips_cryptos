@@ -13,6 +13,15 @@ def init_baseline()-> Model:
 
     return model
 
+def init_model()-> Model:
+
+
+
+
+
+
+
+
 def compile_model(model: Model, learning_rate=0.1) -> Model:
     """
     Compile the Neural Network
