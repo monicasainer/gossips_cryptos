@@ -22,10 +22,6 @@ TODAY = date.today().strftime("%Y-%m-%d")
 
 st.title('Stock Forecast App 💎')
 
-image = Image.open('forecast.jpg')
-
-st.image(image, caption='Magician')
-
 st.write('Esta aplicación te permite generar predicciones del precio de las acciones de los stocks mas importantes .')
 st.markdown("""La libreria usada para el forecasting es **[Prophet](https://facebook.github.io/prophet/)**.""")
 
