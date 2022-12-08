@@ -10,3 +10,6 @@ pytest
 seaborn
 scikit-learn
 tensorflow
+fastapi
+pytz
+uvicorn
