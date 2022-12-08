@@ -1,201 +1,182 @@
-from pathlib import PureWindowsPath
 import streamlit as st
+from datetime import date
 
-import numpy as np
+
 import pandas as pd
+import yfinance as yf
+from prophet import Prophet
+from prophet.plot import plot_plotly
+from plotly import graph_objs as go
+from plotly.subplots import make_subplots
+import plotly as px
+from prophet.plot import add_changepoints_to_plot
+from prophet.diagnostics import cross_validation
+from prophet.diagnostics import performance_metrics
+from prophet.plot import plot_cross_validation_metric
 from PIL import Image
-import datetime
-#!/usr/bin/env python
+
+
+
+START = "2015-01-01"
+TODAY = date.today().strftime("%Y-%m-%d")
+
+st.title('Stock Forecast App 💎')
+
+image = Image.open('forecast.jpg')
+
+st.image(image, caption='Magician')
+
+st.write('Esta aplicación te permite generar predicciones del precio de las acciones de los stocks mas importantes .')
+st.markdown("""La libreria usada para el forecasting es **[Prophet](https://facebook.github.io/prophet/)**.""")
+
+stocks = ('GOOG', 'AAPL', 'MSFT', 'TSLA','FB','AMZN','BTC-USD','ETH-USD')
+selected_stock = st.selectbox('Select dataset for prediction', stocks)
+
+n_years = st.slider('Years of prediction:', 1, 4)
+period = n_years* 365
+
+
+@st.cache
+def load_data(ticker):
+    data = yf.download(ticker, START, TODAY)
+    data.reset_index(inplace=True)
+    return data
+
+st.subheader('1.Data Loading 🏋️')
+
+data_load_state = st.text('Loading data...')
+data = load_data(selected_stock)
+data_load_state.text('Loading data... done!')
+
+st.subheader('2.Exploratory Data Analysis 📊')
+st.markdown('Una vez cargados los datos pasamos al análisis exploratorio')
+
+st.subheader('Raw data')
+st.markdown('Debajo tenemos las últimas 5 observaciones del stock')
+st.write(data.tail())
+
+st.subheader('Descriptive Statistics')
+st.markdown('Se pueden observar los máximos,minimos, desviación estándar, precio medio')
+st.write(data.describe())
+
+# Plot raw data
+st.subheader(' Line Plot ')
+
+def plot_raw_data():
+	fig = go.Figure()
+	fig.add_trace(go.Scatter(x=data['Date'], y=data['Open'], name="stock_open"))
+	fig.add_trace(go.Scatter(x=data['Date'], y=data['Close'], name="stock_close"))
+	fig.layout.update(title_text='Time Series data with Rangeslider', xaxis_rangeslider_visible=True)
+	st.plotly_chart(fig)
+
+plot_raw_data()
+
+# Candle Plot
+st.subheader(' Candlestick Plot: Price Evolution')
+
+def plot_candle_data():
+    fig = go.Figure()
+    fig.add_trace(go.Candlestick(x=data['Date'],
+                open=data['Open'],
+                high=data['High'],
+                low=data['Low'],
+                close=data['Close'], name = 'market data'))
+    fig.update_layout(
+    title='Stock share price evolution',
+    yaxis_title='Stock Price (USD per Shares)')
+    st.plotly_chart(fig)
+
+plot_candle_data()
+
+
+
+# Predict forecast with Prophet.
+df_train = data[['Date','Close']]
+df_train = df_train.rename(columns={"Date": "ds", "Close": "y"})
+
+m = Prophet(interval_width=0.95)
+m.fit(df_train)
+future = m.make_future_dataframe(periods=period,freq = 'D')
+forecast = m.predict(future)
+
+# Show and plot forecast
+st.subheader('3.Forecast data 🔮')
+st.write("El modelo se entrena con los datos y genera predicciones.")
+st.write("Carga una serie temporal para activarlo.")
+st.write(forecast.tail())
+
+st.write(f'Forecast plot for {n_years} years')
+fig1 = plot_plotly(m, forecast)
+st.plotly_chart(fig1)
+
+st.subheader("Forecast components 📚")
+st.write("Cargamos los componentes del modelo.")
+fig2 = m.plot_components(forecast)
+st.write(fig2)
+st.markdown(' El primer gráfico muestra información sobre la tendencia.')
+st.markdown(' El segundo gráfico muestra información sobre la tendencia semanal.')
+st.markdown('El último gráfico nos aporta información acerca de la tenencia anual.')
+
+st.subheader('ChangePoints Plot 🔱')
+st.markdown('Los **Changepoints** son los puntos de fecha en los que las series temporales presentan cambios bruscos en la trayectoria.')
+st.markdown('Por defecto, Prophet añade **25 puntos** de cambio al 80% inicial del conjunto de datos.')
+
+fig3 = m.plot(forecast)
+a = add_changepoints_to_plot(fig3.gca(), m, forecast)
+st.write(fig3)
+
+
+st.subheader('4.Model Evaluation 📝')
+st.markdown('Para analizar el **MAE y RMSE**, debemos divir los datos en train y test y hacer una validación cruzada ')
+with st.expander("Explicación"):
+            st.markdown("""La libreria **Prophet** permite dividir nuestro historico de datos en data de entrenamiento y datos test para hacer una validación cruzada. Las principales características de la validación cruzada con Prophet:""")
+            st.write("**Training data (initial)**: La cantidad de datos para el entranmiento. El parametro en la API se llama inicial.")
+            st.write("**Horizon**: Los datos aparte de la validación.")
+            st.write("**Cutoff (period)**: se realiza un forecast para cada punto observado entre el corte y el corte + horizonte.""")
+
+with st.expander("Cross validation"):
+            initial = st.number_input(value= 365,label="initial",min_value=30,max_value=1096)
+            initial = str(initial) + " days"
+
+            period = st.number_input(value= 90,label="period",min_value=1,max_value=365)
+            period = str(period) + " days"
+
+            horizon = st.number_input(value= 90, label="horizon",min_value=30,max_value=366)
+            horizon = str(horizon) + " days"
+
+with st.expander("Metrics"):
+
+
+    df_cv = cross_validation(m, initial='1000 days', period='90 days', horizon = '365 days')
+    df_p= performance_metrics(df_cv)
+
+    #st.write(df_p)
+
+    st.markdown('Metrics definition')
+    st.write("**Mse: mean absolute error**")
+    st.write("**Mae: Mean average error**")
+    st.write("**Mape: Mean average percentage error**")
+    st.write("**Mse: mean absolute error**")
+    st.write("**Mdape: Median average percentage error**")
+
+
 try:
-    # For Python 3.0 and later
-    from urllib.request import urlopen
-except ImportError:
-    # Fall back to Python 2's urllib2
 
-    import json
-from multiapp import MultiApp
-from apps import home, past_performance, prediction # import your app modules here
+    metrics = ['Choose a metric','mse','rmse','mae','mape','mdape','coverage']
+    selected_metric = st.selectbox("Select metric to plot",options=metrics)
+    fig4 = plot_cross_validation_metric(df_cv, metric=selected_metric)
+    st.write(fig4)
 
-
-st.set_page_config(
-            page_title="Quick reference", # => Quick reference - Streamlit
-            page_icon="🐍",
-            layout="centered", # wide
-            initial_sidebar_state="auto") # collapsed
-
-# df = pd.DataFrame({
-#     'first column': ['Some general info please' , 'Check out past performance', 'Give me tradding advice'],
-#     'second column': [10, 20, 30]
-# })
-# option = st.sidebar.selectbox(
-#     'What do you want to use our services for?',
-#      df['first column'])
-
-# 'You selected:', option
-
-app = MultiApp()
-# Add all your application here
-app.add_app("Home", home.app)
-app.add_app("Predict", prediction.app)
-app.add_app("Past Performance", past_performance.app)
-
-
-# The main app
-app.run()
-
-
-# ### THIS WILL GO ON THE FIRST PAGe
-
-# st.markdown("""# Cryptocurrency trading!
-# ## We predict the movement in bitcoin price, taking into account sentiment analysis from reddit and twitter
-# Do you wanna have a go yourself?""")
-
-# def get_jsonparsed_data():
-#     """
-#     Receive the content of ``url``, parse it as JSON and return the object.
-#     Parameters
-#     ----------
-#     url : str
-#     Returns
-#     -------
-#     dict
-#     """
-#     url = ("https://financialmodelingprep.com/api/v3/quote/BTCUSD?apikey=a58413697e8263de9c95cab92049ea3f")
-#     response = urlopen(url)
-#     data = response.read().decode("utf-8")
-#     return json.loads(data)
-
-# # print(get_jsonparsed_data(url)[0]['price'])
-# bitcoin_live_data = get_jsonparsed_data()[0]
-# bitcoin_current_price = bitcoin_live_data ['price']
-# bitcoin_change = bitcoin_live_data ['changesPercentage']
-
-
-# # number = st.number_input('How much money are you investing???')
-
-# # st.write('You are investing: ', number)
-
-
-# col1, col2, col3 = st.columns(3)
-# col1.metric("", "", "")
-# col2.metric("BITCOIN", f"${bitcoin_current_price}", f"{bitcoin_change}%")
-# col3.metric("", "", "")
-# # perhaps insert here the current value of bitcoin?
-
-
-
-# ### THIS WILL GO ON THE SECOND PAGE
-
-# st.markdown("""# Past performance """)
-
-# def plot_bitcoin_change(df):
-#     st.markdown("""### Bitcoin Price """)
-#     st.write('Here you can see the change of bitcoin price against of that our model predicted!')
-#     st.write('(actually now is open against close but soon you will be able to)')
-#     st.line_chart(df)
-
-# def get_past_data(start, end):
-#     #obtain past csv data
-#     past_performance = pd.read_csv('../cryptocurrency_trading/data/4-month-BTC-perf.csv')
-#     past_performance['date'] = pd.to_datetime(past_performance['date'])
-#     past_performance.sort_values(by="date", inplace = True)
-#     past_performance['date'] = past_performance['date'].dt.date
-#     past_performance.set_index('date', inplace = True)
-#     df = past_performance[past_performance.index >= start]
-#     df = df[df.index <= end].copy()
-#     return df
-
-# def get_earnings(investment, earnings,start):
-#     yesterday  = start - datetime.timedelta(days=1)
-#     initial_investment = pd.DataFrame([investment], index = [yesterday], columns = ['dif'])
-#     earnings.columns = ['pred', 'real']
-#     earnings['dif'] = earnings['pred'] - earnings['real']
-#     difference = initial_investment.append(earnings[['dif']])
-#     sum = difference.cumsum()
-#     sum.columns = ['Bitcoin earnings']
-#     sum['No investment'] = investment
-#     st.markdown("""### Making money!""")
-#     st.write('These are your earnings if you used our model against just saving it!')
-#     st.line_chart(sum)
-#     last_money = sum.iloc[-1:,:]
-#     extra_cash = last_money['Bitcoin earnings'] - last_money['No investment']
-#     st.write(f"If you used our model instead of just saving it you woul've made an extra: ${extra_cash.values[0]}")
-
-
-# st.write(' ')
-# st.write('In this section you will be able to see how much money you would have made if you used our model in the past instead of just saving it!')
-
-# # Ask for innitial investment:
-# st.markdown("""### Let's Invest some money!""")
-# investment = st.slider('How much money are we investing?', 100, 1000, 10)
-# st.write(' ')
-# st.write('Select a time period to invest!')
-# min_start = datetime.datetime(2021, 5, 3)
-# max_value = datetime.datetime(2021, 9, 7)
-# start_date = st.date_input('Start date', min_start, min_value = min_start, max_value = max_value)
-# end_date = st.date_input('End date', max_value, min_value  = min_start+datetime.timedelta(days=1), max_value = max_value)
-
-# if start_date < end_date:
-#     #st.success('Start date: `%s`\n\nEnd date: `%s`' % (start_date, end_date))
-#     past_performance = get_past_data(start_date, end_date)
-#     plot_bitcoin_change(past_performance)
-#     get_earnings(investment, past_performance, start_date)
-# else:
-#     st.error('Error: End date must fall after start date.')
+except:
+    st.error("Please make sure that you select a metric")
+    st.stop()
 
 
 
 
-# ### THIS WILL GO ON THE THIRD PAGE
-# buy = 0
-
-
-# st.markdown("""## Using the model """)
-
-# if st.button('Show me what to do with my money!'):
-#     # print is visible in the server output, not in the page
-#     print('The model will tell you what to do')
-#     # st.write('I was clicked 🎉')
-#     # st.write('Further clicks are not visible but are executed')
-
-#     if buy == 1:
-#         image = Image.open('photos_frontend/Buy-Bitcoin.jpg')
-#     else:
-#         image = Image.open('sell-bitcoin.jpg')
-#     st.image(image, caption='Our recommendation!!')
-#     st.write('👎SELL!!👎')
-#     st.write('👍BUY!!👍')
-
-
-
-
-# else:
-#     st.write('Will it be sell or buy!!')
-
-
-
-
-# CSS = """
-# h1 {
-#     color: red;
-# }
-
-# """
-
-# if st.checkbox('Inject CSS'):
-#     st.write(f'<style>{CSS}</style>', unsafe_allow_html=True)
-
-# df = pd.DataFrame({
-#           'first column': list(range(1, 11)),
-#           'second column': np.arange(10, 101, 10)
-#         })
-
-# this slider allows the user to select a number of lines
-# to display in the dataframe
-# the selected value is returned by st.slider
-# line_count = st.slider('Select a line count', 1, 10, 3)
-
-# # and used in order to select the displayed lines
-# head_df = df.head(line_count)
-
-# head_df
+st.subheader('Authors')
+st.write('**Sebastian Esponda** :sunglasses:' )
+st.write('**Gary Martin** :wink:')
+st.write('**Levi Vilchez** :stuck_out_tongue:')
+st.write('**Javier Jimenez Peña** :laughing:')
+st.write('**Youssef Ouabi**:smile:' )
