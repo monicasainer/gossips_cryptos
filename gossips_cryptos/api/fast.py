@@ -1,12 +1,11 @@
-import datetime
+
+import tensorflow as tf
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from gossips_cryptos.model.data import fgindex, prices
-from gossips_cryptos.model.preprocess import data_cleaning,window_data,folds,scaling,preprocess_features
-
-
-import pandas as pd
-#from gossips_cryptos.model import model, data, preprocess
+from gossips_cryptos.model.preprocess import data_cleaning,preprocess_features
+from gossips_cryptos.model.model import init_model,fit_model
+from gossips_cryptos.model.registry import load_model
 
 app = FastAPI()
 
@@ -20,22 +19,18 @@ app.add_middleware(
 
 # http://127.0.0.1:8000/predict?crypto_currency=BTC
 
+app.state.model = load_model()
+
 @app.get("/predict")
-def predict(crypto_currency ="BTC"):
-
-    #Data Retrieval
-    fg_index_df = fgindex()
-    price = prices(crypto_currency)
-
-    #Data Cleaning
-    df = data_cleaning(price,fg_index_df)
-    X_train_scaled,X_test_scaled,y_train_scaled,y_test_scaled,scaler_y = preprocess_features(df)
-    model = model.init_baseline().compile_model()
-    fit_model, history = model.train_model()
-    fit_model = app.state.model
-    y_pred = fit_model.predict(X_processed)
-
-    return y_pred
+def predictor(crypto='BTC',horizon=1):
+    price = prices(crypto)
+    index = fgindex()
+    data_cleaned= data_cleaning(price,index)
+    X_train_scaled,X_test_scaled,y_train_scaled,y_test_scaled,scaler_y = preprocess_features(data_cleaned,20,horizon)
+    model = app.state.model
+    predicted = model.predict(X_test_scaled)
+    unscaled_pred = scaler_y.inverse_transform(predicted)
+    return dict(price=float(unscaled_pred))
 
 
 @app.get("/")

@@ -1,10 +1,14 @@
 ## Baseline Model
 import numpy as np
+import tensorflow as tf
+from typing import Dict, List, Tuple, Sequence
 from tensorflow.keras.layers import Lambda
 from tensorflow.keras import models, layers, optimizers, metrics
 from tensorflow.keras.callbacks import EarlyStopping
+from gossips_cryptos.model.preprocess import preprocess_features #scaler_y
 
-def init_baseline()-> Model:
+
+def init_baseline():
     """ returns a model ready to initialize.
     It predicts the last seen value for the future value forecast.
     """
@@ -13,72 +17,60 @@ def init_baseline()-> Model:
 
     return model
 
-def init_model()-> Model:
-
-
-
-
-
-
-
-
-def compile_model(model: Model, learning_rate=0.1) -> Model:
+def init_model(y_train_scaled):
+    """RNN architecture and compile model
     """
-    Compile the Neural Network
-    """
-    adam = optimizers.Adam(learning_rate=learning_rate)
-    model.compile(loss='mse', optimizer=adam, metrics=["mae"])
+
+    model = models.Sequential()
+
+    ## 1.1 - Recurrent Layer
+    model.add(layers.LSTM(64,
+                          activation='tanh',
+                          return_sequences = False,
+                          recurrent_dropout = 0.2))
+
+    ## 1.2 - Predictive Dense Layers
+    output_length = y_train_scaled.shape[1]
+    model.add(layers.Dense(output_length, activation='relu'))
+
+    ##2.0 Defining the optimizer
+    adam = optimizers.Adam(learning_rate = 0.0001)
+    model.compile(loss = 'mse',
+                  optimizer = adam,
+                  metrics = ['mae'])
+
     return model
 
 
-def train_model(model: Model,
-                X_train: np.ndarray,
-                y_train: np.ndarray,
-                batch_size=64,  #Pending
-                patience=2,
-                # validation_split=0.3,
-                validation_data=None) -> Tuple[Model, dict]:
+def fit_model(X_train_scaled, y_train_scaled, model: tf.keras.Model, verbose=1) -> Tuple[tf.keras.Model, dict]:
+
     """
     Fit model and return a the tuple (fitted_model, history)
     """
 
+    es = EarlyStopping(monitor = "val_loss",
+                      patience = 10,
+                      mode = "min",
+                      restore_best_weights = True)
 
-    es = EarlyStopping(monitor="val_loss", #The monitored value
-                       patience=patience,
-                       restore_best_weights=True,
-                       verbose=0)
 
-    history = model.fit(X_train,
-                        y_train,
-                        validation_split=validation_split,
-                        validation_data=validation_data,
-                        epochs=100,  #Pending
-                        batch_size=batch_size, #Pending
-                        callbacks=[es],
-                        verbose=0)
+    history = model.fit(X_train_scaled, y_train_scaled,
+                        validation_split = 0.3,
+                        shuffle = False,
+                        batch_size = 16,
+                        epochs = 100,
+                        callbacks = [es],
+                        verbose = verbose)
 
     return model, history
 
-def evaluate_model(model: Model,
-                   X_test: np.ndarray,
-                   y_test: np.ndarray,
-                   batch_size=64) -> Tuple[Model, dict]:
-    """
-    Evaluate trained model performance on test dataset
-    """
 
-    if model is None:
-        return None
 
-    metrics = model.evaluate(
-        x=X_test,
-        y=y_test,
-        batch_size=batch_size,
-        verbose=0,
-        # callbacks=None,
-        return_dict=True)
-
-    loss = metrics["loss"]
-    mae = metrics["mae"]
-
-    return metrics
+## Alternative in gossips_cryptos/api/fast.py
+## Is it actually needed?
+"""
+def predict(X_test_scaled,model: tf.keras.Model,scaler_y):
+    predicted = model.predict(X_test_scaled)
+    unscaled_pred = scaler_y.inverse_transform(predicted)
+    return unscaled_pred
+"""

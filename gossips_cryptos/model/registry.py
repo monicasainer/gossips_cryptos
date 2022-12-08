@@ -35,8 +35,7 @@ def save_model(model: Model = None,
             #if params is not None:
                 #mlflow.log_params(params)
 
-            #if metrics is not None:
-                #mlflow.log_metrics(metrics)
+            mlflow.log_metrics(metrics)
 
             if model is not None:
 
