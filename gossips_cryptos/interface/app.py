@@ -1,146 +1,201 @@
+from pathlib import PureWindowsPath
 import streamlit as st
+
 import numpy as np
 import pandas as pd
-import matplotlib as plt
-from datetime import date, datetime
+from PIL import Image
+import datetime
+#!/usr/bin/env python
+try:
+    # For Python 3.0 and later
+    from urllib.request import urlopen
+except ImportError:
+    # Fall back to Python 2's urllib2
 
-from cryptocmd import CmcScraper
-from fbprophet import Prophet
-from fbprophet.plot import plot_plotly
-from plotly import graph_objs as go
-
-st.title('Crypto Forecaster')
-
-st.markdown("This application enables you to predict on the future value of any cryptocurrency (available on Coinmarketcap.com), for \
-	any number of days into the future! The application is built with Streamlit (the front-end) and the Facebook Prophet model, \
-	which is an advanced open-source forecasting model built by Facebook, running under the hood. You can select to train the model \
-	on either all available data or a pre-set date range. Finally, you can plot the prediction results on both a normal and log scale.")
-
-### Change sidebar color
-st.markdown(
-    """
-<style>
-.sidebar .sidebar-content {
-    background-image: linear-gradient(#D6EAF8,#D6EAF8);
-    color: black;
-}
-</style>
-""",
-    unsafe_allow_html=True,
-)
-
-### Set bigger font style
-st.markdown(
-	"""
-<style>
-.big-font {
-	fontWeight: bold;
-    font-size:22px !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.sidebar.markdown("<p class='big-font'><font color='black'>Forecaster Settings</font></p>", unsafe_allow_html=True)
-
-### Select ticker & number of days to predict on
-selected_ticker = st.sidebar.text_input("Select a ticker for prediction (i.e. BTC, ETH, LINK, etc.)", "BTC")
-period = int(st.sidebar.number_input('Number of days to predict:', min_value=0, max_value=1000000, value=365, step=1))
-training_size = int(st.sidebar.number_input('Training set (%) size:', min_value=10, max_value=100, value=100, step=5)) / 100
-
-### Initialise scraper without time interval
-@st.cache
-def load_data(selected_ticker):
-	init_scraper = CmcScraper(selected_ticker)
-	df = init_scraper.get_dataframe()
-	min_date = pd.to_datetime(min(df['Date']))
-	max_date = pd.to_datetime(max(df['Date']))
-	return min_date, max_date
-
-data_load_state = st.sidebar.text('Loading data...')
-min_date, max_date = load_data(selected_ticker)
-data_load_state.text('Loading data... done!')
+    import json
+from multiapp import MultiApp
+from apps import home, past_performance, prediction # import your app modules here
 
 
-### Select date range
-date_range = st.sidebar.selectbox("Select the timeframe to train the model on:", options=["All available data", "Specific date range"])
+st.set_page_config(
+            page_title="Quick reference", # => Quick reference - Streamlit
+            page_icon="🐍",
+            layout="centered", # wide
+            initial_sidebar_state="auto") # collapsed
 
-if date_range == "All available data":
+# df = pd.DataFrame({
+#     'first column': ['Some general info please' , 'Check out past performance', 'Give me tradding advice'],
+#     'second column': [10, 20, 30]
+# })
+# option = st.sidebar.selectbox(
+#     'What do you want to use our services for?',
+#      df['first column'])
 
-	### Initialise scraper without time interval
-	scraper = CmcScraper(selected_ticker)
+# 'You selected:', option
 
-elif date_range == "Specific date range":
-
-	### Initialise scraper with time interval
-	start_date = st.sidebar.date_input('Select start date:', min_value=min_date, max_value=max_date, value=min_date)
-	end_date = st.sidebar.date_input('Select end date:', min_value=min_date, max_value=max_date, value=max_date)
-	scraper = CmcScraper(selected_ticker, str(start_date.strftime("%d-%m-%Y")), str(end_date.strftime("%d-%m-%Y")))
-
-### Pandas dataFrame for the same data
-data = scraper.get_dataframe()
+app = MultiApp()
+# Add all your application here
+app.add_app("Home", home.app)
+app.add_app("Predict", prediction.app)
+app.add_app("Past Performance", past_performance.app)
 
 
-st.subheader('Raw data')
-st.write(data.head())
+# The main app
+app.run()
 
-### Plot functions
-def plot_raw_data():
-	fig = go.Figure()
-	fig.add_trace(go.Scatter(x=data['Date'], y=data['Close'], name="Close"))
-	fig.layout.update(title_text='Time Series data with Rangeslider', xaxis_rangeslider_visible=True)
-	st.plotly_chart(fig)
 
-def plot_raw_data_log():
-	fig = go.Figure()
-	fig.add_trace(go.Scatter(x=data['Date'], y=data['Close'], name="Close"))
-	fig.update_yaxes(type="log")
-	fig.layout.update(title_text='Time Series data with Rangeslider', xaxis_rangeslider_visible=True)
-	st.plotly_chart(fig)
+# ### THIS WILL GO ON THE FIRST PAGe
 
-### Plot (log) data
-plot_log = st.checkbox("Plot log scale")
-if plot_log:
-	plot_raw_data_log()
-else:
-	plot_raw_data()
+# st.markdown("""# Cryptocurrency trading!
+# ## We predict the movement in bitcoin price, taking into account sentiment analysis from reddit and twitter
+# Do you wanna have a go yourself?""")
 
-### Predict forecast with Prophet
-if st.button("Predict"):
+# def get_jsonparsed_data():
+#     """
+#     Receive the content of ``url``, parse it as JSON and return the object.
+#     Parameters
+#     ----------
+#     url : str
+#     Returns
+#     -------
+#     dict
+#     """
+#     url = ("https://financialmodelingprep.com/api/v3/quote/BTCUSD?apikey=a58413697e8263de9c95cab92049ea3f")
+#     response = urlopen(url)
+#     data = response.read().decode("utf-8")
+#     return json.loads(data)
 
-	df_train = data[['Date','Close']]
-	df_train = df_train.rename(columns={"Date": "ds", "Close": "y"})
+# # print(get_jsonparsed_data(url)[0]['price'])
+# bitcoin_live_data = get_jsonparsed_data()[0]
+# bitcoin_current_price = bitcoin_live_data ['price']
+# bitcoin_change = bitcoin_live_data ['changesPercentage']
 
-	### Create Prophet model
-	m = Prophet(
-		changepoint_range=training_size, # 0.8
-        yearly_seasonality='auto',
-        weekly_seasonality='auto',
-        daily_seasonality=False,
-        seasonality_mode='multiplicative', # multiplicative/additive
-        changepoint_prior_scale=0.05
-		)
 
-	### Add (additive) regressor
-	for col in df_train.columns:
-	    if col not in ["ds", "y"]:
-	        m.add_regressor(col, mode="additive")
+# # number = st.number_input('How much money are you investing???')
 
-	m.fit(df_train)
+# # st.write('You are investing: ', number)
 
-	### Predict using the model
-	future = m.make_future_dataframe(periods=period)
-	forecast = m.predict(future)
 
-	### Show and plot forecast
-	st.subheader('Forecast data')
-	st.write(forecast.head())
+# col1, col2, col3 = st.columns(3)
+# col1.metric("", "", "")
+# col2.metric("BITCOIN", f"${bitcoin_current_price}", f"{bitcoin_change}%")
+# col3.metric("", "", "")
+# # perhaps insert here the current value of bitcoin?
 
-	st.subheader(f'Forecast plot for {period} days')
-	fig1 = plot_plotly(m, forecast)
-	if plot_log:
-		fig1.update_yaxes(type="log")
-	st.plotly_chart(fig1)
 
-	st.subheader("Forecast components")
-	fig2 = m.plot_components(forecast)
-	st.write(fig2)
+
+# ### THIS WILL GO ON THE SECOND PAGE
+
+# st.markdown("""# Past performance """)
+
+# def plot_bitcoin_change(df):
+#     st.markdown("""### Bitcoin Price """)
+#     st.write('Here you can see the change of bitcoin price against of that our model predicted!')
+#     st.write('(actually now is open against close but soon you will be able to)')
+#     st.line_chart(df)
+
+# def get_past_data(start, end):
+#     #obtain past csv data
+#     past_performance = pd.read_csv('../cryptocurrency_trading/data/4-month-BTC-perf.csv')
+#     past_performance['date'] = pd.to_datetime(past_performance['date'])
+#     past_performance.sort_values(by="date", inplace = True)
+#     past_performance['date'] = past_performance['date'].dt.date
+#     past_performance.set_index('date', inplace = True)
+#     df = past_performance[past_performance.index >= start]
+#     df = df[df.index <= end].copy()
+#     return df
+
+# def get_earnings(investment, earnings,start):
+#     yesterday  = start - datetime.timedelta(days=1)
+#     initial_investment = pd.DataFrame([investment], index = [yesterday], columns = ['dif'])
+#     earnings.columns = ['pred', 'real']
+#     earnings['dif'] = earnings['pred'] - earnings['real']
+#     difference = initial_investment.append(earnings[['dif']])
+#     sum = difference.cumsum()
+#     sum.columns = ['Bitcoin earnings']
+#     sum['No investment'] = investment
+#     st.markdown("""### Making money!""")
+#     st.write('These are your earnings if you used our model against just saving it!')
+#     st.line_chart(sum)
+#     last_money = sum.iloc[-1:,:]
+#     extra_cash = last_money['Bitcoin earnings'] - last_money['No investment']
+#     st.write(f"If you used our model instead of just saving it you woul've made an extra: ${extra_cash.values[0]}")
+
+
+# st.write(' ')
+# st.write('In this section you will be able to see how much money you would have made if you used our model in the past instead of just saving it!')
+
+# # Ask for innitial investment:
+# st.markdown("""### Let's Invest some money!""")
+# investment = st.slider('How much money are we investing?', 100, 1000, 10)
+# st.write(' ')
+# st.write('Select a time period to invest!')
+# min_start = datetime.datetime(2021, 5, 3)
+# max_value = datetime.datetime(2021, 9, 7)
+# start_date = st.date_input('Start date', min_start, min_value = min_start, max_value = max_value)
+# end_date = st.date_input('End date', max_value, min_value  = min_start+datetime.timedelta(days=1), max_value = max_value)
+
+# if start_date < end_date:
+#     #st.success('Start date: `%s`\n\nEnd date: `%s`' % (start_date, end_date))
+#     past_performance = get_past_data(start_date, end_date)
+#     plot_bitcoin_change(past_performance)
+#     get_earnings(investment, past_performance, start_date)
+# else:
+#     st.error('Error: End date must fall after start date.')
+
+
+
+
+# ### THIS WILL GO ON THE THIRD PAGE
+# buy = 0
+
+
+# st.markdown("""## Using the model """)
+
+# if st.button('Show me what to do with my money!'):
+#     # print is visible in the server output, not in the page
+#     print('The model will tell you what to do')
+#     # st.write('I was clicked 🎉')
+#     # st.write('Further clicks are not visible but are executed')
+
+#     if buy == 1:
+#         image = Image.open('photos_frontend/Buy-Bitcoin.jpg')
+#     else:
+#         image = Image.open('sell-bitcoin.jpg')
+#     st.image(image, caption='Our recommendation!!')
+#     st.write('👎SELL!!👎')
+#     st.write('👍BUY!!👍')
+
+
+
+
+# else:
+#     st.write('Will it be sell or buy!!')
+
+
+
+
+# CSS = """
+# h1 {
+#     color: red;
+# }
+
+# """
+
+# if st.checkbox('Inject CSS'):
+#     st.write(f'<style>{CSS}</style>', unsafe_allow_html=True)
+
+# df = pd.DataFrame({
+#           'first column': list(range(1, 11)),
+#           'second column': np.arange(10, 101, 10)
+#         })
+
+# this slider allows the user to select a number of lines
+# to display in the dataframe
+# the selected value is returned by st.slider
+# line_count = st.slider('Select a line count', 1, 10, 3)
+
+# # and used in order to select the displayed lines
+# head_df = df.head(line_count)
+
+# head_df
