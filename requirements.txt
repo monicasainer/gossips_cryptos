@@ -13,7 +13,3 @@ tensorflow
 fastapi
 pytz
 uvicorn
-streamlit
-requests
-plotly
-yfinance
