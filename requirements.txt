@@ -13,5 +13,3 @@ tensorflow
 fastapi
 pytz
 uvicorn
-streamlit
-requests
