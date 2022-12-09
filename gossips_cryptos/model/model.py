@@ -58,7 +58,7 @@ def fit_model(X_train_scaled, y_train_scaled, model: tf.keras.Model, verbose=1) 
                         validation_split = 0.3,
                         shuffle = False,
                         batch_size = 16,
-                        epochs = 100,
+                        epochs = 200,
                         callbacks = [es],
                         verbose = verbose)
 
