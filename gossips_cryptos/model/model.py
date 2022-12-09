@@ -17,7 +17,7 @@ def init_baseline():
 
     return model
 
-def ç(y_train_scaled):
+def init_model(y_train_scaled):
     """RNN architecture and compile model
     """
 
