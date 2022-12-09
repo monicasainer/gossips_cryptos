@@ -50,7 +50,7 @@ def preprocess_features(cleaned_data: pd.DataFrame,window=40,horizon=1,fold_size
 
         for i in range(len(df) - window - 1):
             features = df.iloc[i:(i + window),feature_column]
-            target = df.iloc[(i + window + horizon), target_column]
+            target = df.iloc[(i + 40 + 1), target_column]
             X.append(features)
             y.append(target)
 

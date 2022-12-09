@@ -1,12 +1,8 @@
 import mlflow
 from mlflow.tracking import MlflowClient
 
-import glob
 import os
 import time
-import pickle
-
-from colorama import Fore, Style
 
 from tensorflow.keras import Model, models
 
