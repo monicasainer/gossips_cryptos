@@ -34,7 +34,7 @@ def data_cleaning(raw_data_prices,raw_data_sentiment):
     return df
 
 
-def preprocess_features(cleaned_data: pd.DataFrame,window=20,horizon=1) -> np.ndarray:
+def preprocess_features(cleaned_data: pd.DataFrame,window=40,horizon=1) -> np.ndarray:
 
     def window_data(cleaned_data):
         """returns two arrays:
@@ -64,7 +64,7 @@ def preprocess_features(cleaned_data: pd.DataFrame,window=20,horizon=1) -> np.nd
         y_train : array of lists with the 70% of the observed target values
         y_test : array of lists with the 30% of the observed target values
         """
-        split = int(.7 * len(X))
+        split = int(.8 * len(X))
         X_train = X[:split - 1]
         X_test = X[split:]
 
@@ -97,8 +97,8 @@ def preprocess_features(cleaned_data: pd.DataFrame,window=20,horizon=1) -> np.nd
         y_train_scaled = scaler_y.fit_transform(y_train)
         y_test_scaled = scaler_y.transform(y_test)
 
-        X_train_scaled = X_train_scaled.reshape((X_train_scaled.shape[0], 20, 2))
-        X_test_scaled = X_test_scaled.reshape((X_test_scaled.shape[0],  20, 2))
+        X_train_scaled = X_train_scaled.reshape((X_train_scaled.shape[0], 40, 2))
+        X_test_scaled = X_test_scaled.reshape((X_test_scaled.shape[0],  40, 2))
 
         return X_train_scaled,X_test_scaled,y_train_scaled,y_test_scaled,scaler_y
 

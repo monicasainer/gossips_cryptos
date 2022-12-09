@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 from typing import Dict, List, Tuple, Sequence
 from tensorflow.keras.layers import Lambda
-from tensorflow.keras import models, layers, optimizers, metrics
+from tensorflow.keras import Model, models, layers, optimizers, metrics
 from tensorflow.keras.callbacks import EarlyStopping
 from gossips_cryptos.model.preprocess import preprocess_features #scaler_y
 
@@ -17,7 +17,7 @@ def init_baseline():
 
     return model
 
-def init_model(y_train_scaled):
+def ç(y_train_scaled):
     """RNN architecture and compile model
     """
 
@@ -58,7 +58,7 @@ def fit_model(X_train_scaled, y_train_scaled, model: tf.keras.Model, verbose=1) 
                         validation_split = 0.3,
                         shuffle = False,
                         batch_size = 16,
-                        epochs = 100,
+                        epochs = 200,
                         callbacks = [es],
                         verbose = verbose)
 

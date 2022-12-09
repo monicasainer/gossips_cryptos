@@ -10,7 +10,7 @@ from colorama import Fore, Style
 
 from tensorflow.keras import Model, models
 
-from gossips_cryptos.model.model import init_baseline,compile_model,train_model,evaluate_model
+from gossips_cryptos.model.model import init_baseline,init_model,fit_model
 
 def save_model(model: Model = None,
                params: dict = None,
@@ -56,6 +56,7 @@ def load_model(save_copy_locally=False) -> Model:
 
         # load model from mlflow
         model = None
+
         mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI"))
 
         mlflow_model_name = os.environ.get("MLFLOW_MODEL_NAME")
