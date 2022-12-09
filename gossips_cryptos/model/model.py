@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 from typing import Dict, List, Tuple, Sequence
 from tensorflow.keras.layers import Lambda
-from tensorflow.keras import models, layers, optimizers, metrics
+from tensorflow.keras import Model, models, layers, optimizers, metrics
 from tensorflow.keras.callbacks import EarlyStopping
 from gossips_cryptos.model.preprocess import preprocess_features #scaler_y
 
