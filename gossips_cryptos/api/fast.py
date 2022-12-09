@@ -28,7 +28,7 @@ def predictor(crypto='BTC',horizon=1):
     print(price)
     index = fgindex()
     data_cleaned= data_cleaning(price,index)
-    X_train_scaled,X_test_scaled,y_train_scaled,y_test_scaled,scaler_y = preprocess_features(data_cleaned,40,int(horizon))
+    X_train_scaled,X_test_scaled,y_train_scaled,y_test_scaled,scaler_y = preprocess_features(data_cleaned,40,horizon,0.8)
     model = app.state.model
     predicted = model.predict(X_test_scaled)
     unscaled_pred = scaler_y.inverse_transform(predicted)
