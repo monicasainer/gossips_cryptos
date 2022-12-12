@@ -64,13 +64,23 @@ def fit_model(X_train_scaled, y_train_scaled, model: tf.keras.Model, verbose=1) 
 
     return model, history
 
+def evaluate_model(model,
+                   X: np.ndarray,
+                   y: np.ndarray):
+    """
+    Evaluate trained model performance on dataset
+    """
 
 
-## Alternative in gossips_cryptos/api/fast.py
-## Is it actually needed?
-"""
-def predict(X_test_scaled,model: tf.keras.Model,scaler_y):
-    predicted = model.predict(X_test_scaled)
-    unscaled_pred = scaler_y.inverse_transform(predicted)
-    return unscaled_pred
-"""
+    metrics = model.evaluate(
+        x=X,
+        y=y,
+        verbose=1,
+        batch_size = 16,
+        # callbacks=None,
+        return_dict=True)
+
+    loss = metrics["loss"]
+    mae = metrics["mae"]
+
+    return metrics

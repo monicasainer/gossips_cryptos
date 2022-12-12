@@ -9,7 +9,6 @@ from tensorflow.keras import Model, models
 from gossips_cryptos.model.model import init_baseline,init_model,fit_model
 
 def save_model(model: Model = None,
-               params: dict = None,
                metrics: dict = None) -> None:
     """
     persist trained model, params and metrics
@@ -31,7 +30,8 @@ def save_model(model: Model = None,
             #if params is not None:
                 #mlflow.log_params(params)
 
-            mlflow.log_metrics(metrics)
+            if metrics is not None:
+                mlflow.log_metrics(metrics)
 
             if model is not None:
 
@@ -48,7 +48,6 @@ def load_model(save_copy_locally=False) -> Model:
     load the latest saved model, return None if no model found
     """
     if os.environ.get("MODEL_TARGET") == "mlflow":
-        stage = "Production"
 
         # load model from mlflow
         model = None
