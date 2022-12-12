@@ -54,7 +54,7 @@ def preprocess_features(cleaned_data: pd.DataFrame,window=40,horizon=1,fold_size
             X.append(features)
             y.append(target)
 
-        return np.array(X), np.array(y).reshape(-1, 1)
+        return np.array(np.log(X)), np.array(np.log(y)).reshape(-1, 1)
     X,y=window_data(cleaned_data)
 
     def folds(X,y):
