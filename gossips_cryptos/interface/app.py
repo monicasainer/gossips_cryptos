@@ -47,8 +47,6 @@ with st.spinner('Building historic graph...'):
     pred_price_dict=predictor(crypto=crypto_dict[selected_crypto])
     df = data["close"]
     df2 = pd.DataFrame(pred_price_dict["price"], columns = data.index)
-    print(f'🔴{df}')
-    print(f'🔴{df2}')
 
     st.line_chart(data["close"].iloc[-365:-1])
 
