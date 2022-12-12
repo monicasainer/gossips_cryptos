@@ -25,7 +25,6 @@ app.state.model = load_model()
 @app.get("/predict")
 def predictor(crypto='BTC',horizon=1):
     price = prices(crypto)
-    print(price)
     index = fgindex()
     data_cleaned= data_cleaning(price,index)
     X_train_scaled,X_test_scaled,y_train_scaled,y_test_scaled,scaler_y = preprocess_features(data_cleaned,40,horizon,0.8)
