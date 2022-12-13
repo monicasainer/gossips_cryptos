@@ -13,7 +13,7 @@ setup(name='gossips_cryptos',
       #author_email="contact@lewagon.org",
       url="https://github.com/monicasainer/gossips_cryptos",
       install_requires=requirements,
-      packages=find_packages(),
+      packages=find_packages(exclude=("notebooks","api","interface")),
       test_suite="tests",
       # include_package_data: to install data from MANIFEST.in
       include_package_data=True,

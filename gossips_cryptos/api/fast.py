@@ -34,6 +34,8 @@ def predictor(crypto='BTC',horizon=1):
     return dict(price=np.concatenate(unscaled_pred, axis=0).tolist())
 
 
+
+
 @app.get("/")
 def root():
     return dict(greeting="Gossips and Cryptos")
