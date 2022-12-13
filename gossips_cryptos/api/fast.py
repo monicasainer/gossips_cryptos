@@ -31,7 +31,7 @@ def predictor(crypto='BTC',horizon=1):
     model = app.state.model
     predicted = model.predict(X_test_scaled)
     unscaled_pred = np.exp(scaler_y.inverse_transform(predicted))
-    return dict(predict_price=np.concatenate(unscaled_pred, axis=0).tolist())
+    return dict(price=np.concatenate(unscaled_pred, axis=0).tolist())
 
 
 @app.get("/")
